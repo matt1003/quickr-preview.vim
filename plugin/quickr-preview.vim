@@ -29,6 +29,9 @@ endif
 if !exists('g:quickr_preview_on_cursor')
     let g:quickr_preview_on_cursor = 0
 endif
+if !exists('g:quickr_preview_aggressive_cleanup')
+    let g:quickr_preview_aggressive_cleanup = 0
+endif
 " }}
 
 " Construct the command used to open the preview window

@@ -258,11 +258,34 @@ function! InitializeQuickrPreview()
 endfunction
 " }}
 
+" ClearOutUnlistedBuffers() {{
+"
+" WARNING: This feature is experimental, potential to wipe out local changes,
+"          use at own risk! Known issues:
+"           - will delete buffers being referenced by other qf/loc lists.
+"
+function! ClearOutUnlistedBuffers()
+    echom 'deleting buffers'
+    if exists('b:qflist')
+        for l:entry in b:qflist
+            if bufexists(l:entry.bufnr) && !buflisted(l:entry.bufnr)
+                echom 'deleting buffer '.l:entry.bufnr
+                silent execute 'bwipeout'.l:entry.bufnr
+            endif
+        endfor
+    endif
+endfunction
+" }}
+
 " Auto Commands {{
 augroup QuickrPreviewQfAutoCmds
     autocmd! * <buffer>
     " Auto close preview window when closing/deleting the qf/loc list
     autocmd BufDelete <buffer> pclose
+    " Auto cleanup unlisted buffers when closing/deleting the qf/loc list
+    if g:quickr_preview_aggressive_cleanup
+        autocmd BufDelete <buffer> call ClearOutUnlistedBuffers()
+    endif
     " Auto open preview window while scrolling through the qf/loc list
     if g:quickr_preview_on_cursor
         autocmd CursorMoved <buffer> nested silent call QFMove(line("."))

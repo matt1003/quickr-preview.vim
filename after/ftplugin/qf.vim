@@ -148,17 +148,20 @@ if has('timers')
             if exists('b:quickr_preview_timer')
                 call timer_stop(b:quickr_preview_timer)
             endif
-            let b:quickr_preview_timer = timer_start(100, 'InvokeQFList')
+            let s:qf_start_time = reltime()
+            let b:quickr_preview_timer = timer_start(50, 'InvokeQFList')
         endif
     endfunction
     function! InvokeQFList(timer)
         unlet b:quickr_preview_timer
-        silent call QFList(line('.'))
+        "silent call QFList(line('.'))
+        call QFList(line('.'))
+        echom 'TOTALtime: '.reltimestr(reltime(s:qf_start_time))
     endfunction
 else
     function! QFMove(linenr)
         if a:linenr != b:prvlinenr
-            silent call QFList(a:linenr)
+            call QFList(a:linenr)
         endif
     endfunction
 endif
@@ -171,8 +174,12 @@ endif
 " If no valid buffer exists at the specified line then no action is taken.
 "
 function! QFList(linenr)
+    echom '----------------'
+    echom 'list time: '.reltimestr(reltime(s:qf_start_time))
+    let l:qf_start_time = reltime()
     " Get the current entry and ensure it is valid
     let l:entry = GetValidEntry(a:linenr)
+    echom 'find time: '.reltimestr(reltime(l:qf_start_time))
     if empty(l:entry)
         return
     endif
@@ -195,14 +202,24 @@ function! QFList(linenr)
         " Go back to qf/loc window
         keepjumps wincmd p
         set eventignore-=all
+        echom 'jump time: '.reltimestr(reltime(l:qf_start_time))
     else
+<<<<<<< HEAD
         " Note if the buffer of interest is already listed
+=======
+        let l:qf_start_time = reltime()
+>>>>>>> c77c972... wip
         let l:alreadylisted = buflisted(l:entry.bufnr)
         " Open the buffer in the preview window and jump to the line of interest
+        "set eventignore+=all " TODO ... THIS IS KILLING OUR SWAP EXISTS AUTO COMMAND!
         call OpenPreviewWindow(bufname(l:entry.bufnr), l:entry.lnum)
         " Go to preview window
         set eventignore+=all
+        "set eventignore+=all
         keepjumps wincmd P
+        "set eventignore-=all
+        "filetype detect
+        "set eventignore+=all
         " Settings for preview window
         execute 'setlocal '.g:quickr_preview_options
         " Setting for unlisted buffers
@@ -216,6 +233,8 @@ function! QFList(linenr)
         " Go back to qf/loc window
         keepjumps wincmd p
         set eventignore-=all
+        echom 'open time: '.reltimestr(reltime(l:qf_start_time))
+        "AirlineRefresh
     endif
     let b:prvbufnr = l:entry.bufnr
 endfunction
@@ -255,6 +274,8 @@ function! InitializeQuickrPreview()
     let b:prvbufnr = 0
     " Grab the qf/loc list
     call GetLatestQfLocList()
+    " Remove qf/loc from :bn and :bp
+    "setlocal nobuflisted TODO ... this seems to mess up the BufDelete autocmd
 endfunction
 " }}
 
